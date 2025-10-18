@@ -73,11 +73,6 @@ async function authenticate(username, password) {
     // Vérifier les identifiants
     const user = await dbGet('SELECT * FROM admin_users WHERE username = $1', [username]);
     
-    console.log('🔍 User trouvé:', user ? 'OUI' : 'NON');
-    if (user) {
-      console.log('🔍 User data:', { username: user.username, hasPassword: !!user.passwordhash || !!user.passwordHash });
-    }
-    
     if (!user) {
       const attemptResult = await recordAttempt(username, false);
       return {

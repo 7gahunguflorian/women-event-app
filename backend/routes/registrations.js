@@ -3,11 +3,32 @@ const router = express.Router();
 const { pool, dbGet, dbRun, dbAll } = require('../database');
 const { requireAuth } = require('../auth');
 
+// Fonction pour normaliser les noms de colonnes PostgreSQL (minuscules -> camelCase)
+const normalizeRegistration = (reg) => {
+  if (!reg) return null;
+  return {
+    id: reg.id,
+    firstName: reg.firstname || reg.firstName,
+    lastName: reg.lastname || reg.lastName,
+    age: reg.age,
+    phone: reg.phone,
+    isStudent: reg.isstudent || reg.isStudent,
+    studentLevel: reg.studentlevel || reg.studentLevel,
+    studentLocation: reg.studentlocation || reg.studentLocation,
+    church: reg.church,
+    hasSnack: reg.hassnack || reg.hasSnack,
+    snackDetail: reg.snackdetail || reg.snackDetail,
+    addedToGroup: reg.addedtogroup !== undefined ? reg.addedtogroup : reg.addedToGroup,
+    createdAt: reg.createdat || reg.createdAt
+  };
+};
+
 // GET - Récupérer toutes les inscriptions (protégé)
 router.get('/', requireAuth, async (req, res) => {
   try {
     const registrations = await dbAll('SELECT * FROM registrations ORDER BY createdAt DESC');
-    res.json(registrations);
+    const normalized = registrations.map(normalizeRegistration);
+    res.json(normalized);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -113,6 +134,21 @@ router.put('/:id', requireAuth, async (req, res) => {
       addedToGroup
     } = req.body;
 
+    // Normaliser les données entrantes (gérer camelCase et lowercase)
+    const normalizedData = {
+      firstName: firstName || req.body.firstname,
+      lastName: lastName || req.body.lastname,
+      age: age,
+      phone: phone,
+      isStudent: isStudent || req.body.isstudent,
+      studentLevel: studentLevel || req.body.studentlevel,
+      studentLocation: studentLocation || req.body.studentlocation,
+      church: church,
+      hasSnack: hasSnack || req.body.hassnack,
+      snackDetail: snackDetail || req.body.snackdetail,
+      addedToGroup: addedToGroup !== undefined ? addedToGroup : (req.body.addedtogroup !== undefined ? req.body.addedtogroup : 0)
+    };
+
     await dbRun(
       `UPDATE registrations 
        SET firstName = $1, 
@@ -128,17 +164,17 @@ router.put('/:id', requireAuth, async (req, res) => {
            addedToGroup = $11
        WHERE id = $12`,
       [
-        firstName,
-        lastName,
-        age,
-        phone,
-        isStudent,
-        isStudent === 'oui' ? studentLevel : null,
-        isStudent === 'oui' ? studentLocation : null,
-        church,
-        hasSnack,
-        hasSnack === 'oui' ? snackDetail : null,
-        addedToGroup ? 1 : 0,
+        normalizedData.firstName,
+        normalizedData.lastName,
+        normalizedData.age,
+        normalizedData.phone,
+        normalizedData.isStudent,
+        normalizedData.isStudent === 'oui' ? normalizedData.studentLevel : null,
+        normalizedData.isStudent === 'oui' ? normalizedData.studentLocation : null,
+        normalizedData.church,
+        normalizedData.hasSnack,
+        normalizedData.hasSnack === 'oui' ? normalizedData.snackDetail : null,
+        normalizedData.addedToGroup ? 1 : 0,
         id
       ]
     );
@@ -166,6 +202,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
 router.get('/export/csv', requireAuth, async (req, res) => {
   try {
     const registrations = await dbAll('SELECT * FROM registrations ORDER BY lastName, firstName');
+    const normalized = registrations.map(normalizeRegistration);
     
     // Créer le contenu CSV
     const headers = [
@@ -174,10 +211,10 @@ router.get('/export/csv', requireAuth, async (req, res) => {
       'Apporte un snack', 'Détail du snack', 'Ajouté(e) au groupe', 'Date d\'inscription'
     ];
     
-    const rows = registrations.map(reg => [
+    const rows = normalized.map(reg => [
       reg.id,
-      `"${reg.firstName}"`,
-      `"${reg.lastName}"`,
+      `"${reg.firstName || ''}"`,
+      `"${reg.lastName || ''}"`,
       reg.age,
       `"${reg.phone}"`,
       reg.isStudent,
