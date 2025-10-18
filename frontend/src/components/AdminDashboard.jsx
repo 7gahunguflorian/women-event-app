@@ -141,10 +141,10 @@ const AdminDashboard = ({ onLogout, onBackHome }) => {
 
   const filteredRegistrations = registrations.filter(reg => {
     const matchesSearch = 
-      reg.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      reg.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      reg.phone.includes(searchTerm) ||
-      reg.church.toLowerCase().includes(searchTerm.toLowerCase());
+      (reg.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (reg.lastName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (reg.phone || '').includes(searchTerm) ||
+      (reg.church || '').toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesSnack = 
       filterSnack === 'all' ||
