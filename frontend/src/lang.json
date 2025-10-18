@@ -1,0 +1,158 @@
+{
+  "fr": {
+    "title": "Inscription Women's Event",
+    "subtitle": "Événement pour Femmes",
+    "form": {
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "age": "Âge",
+      "phone": "Numéro de téléphone",
+      "isStudent": "Êtes-vous étudiante ?",
+      "yes": "Oui",
+      "no": "Non",
+      "studentLevel": "Niveau d'études",
+      "secondary": "Secondaire",
+      "university": "Université",
+      "studentLocation": "Où étudiez-vous ?",
+      "church": "Église où vous priez (optionnel)",
+      "hasSnack": "Viendrez-vous avec un snack ?",
+      "snackDetail": "Précisez le snack",
+      "submit": "S'inscrire",
+      "submitting": "Inscription en cours..."
+    },
+    "info": {
+      "title": "Informations importantes",
+      "whatsapp": "Vous serez ajoutée au groupe WhatsApp pour recevoir toutes les informations",
+      "age": "Événement réservé aux femmes de 15 ans et plus",
+      "snack": "Le snack est facultatif mais recommandé pour partager ensemble",
+      "location": "Lieu : Jardin Public",
+      "date": "Date : 1er novembre 2025",
+      "time": "Horaire : 9h à 13h"
+    },
+    "admin": {
+      "title": "Tableau de bord Admin",
+      "search": "Rechercher...",
+      "filterSnack": "Filtrer par snack",
+      "filterGroup": "Filtrer par groupe",
+      "all": "Tous",
+      "withSnack": "Avec snack",
+      "withoutSnack": "Sans snack",
+      "added": "Ajoutées",
+      "notAdded": "Non ajoutées",
+      "export": "Exporter CSV",
+      "logout": "Déconnexion",
+      "name": "Nom",
+      "age": "Âge",
+      "phone": "Téléphone",
+      "student": "Étudiante",
+      "level": "Niveau",
+      "church": "Église",
+      "snack": "Snack",
+      "snackDetail": "Détail snack",
+      "addedToGroup": "Ajoutée au groupe",
+      "actions": "Actions",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "confirmDelete": "Êtes-vous sûr de vouloir supprimer cette inscription ?"
+    },
+    "auth": {
+      "title": "Connexion Admin",
+      "username": "Nom d'utilisateur",
+      "password": "Mot de passe",
+      "login": "Se connecter",
+      "cancel": "Annuler",
+      "locked": "Compte verrouillé. Réessayez dans {minutes} minute(s).",
+      "attemptsRemaining": "{attempts} tentative(s) restante(s)"
+    },
+    "stats": {
+      "total": "Total d'inscrites",
+      "withSnack": "Avec snack",
+      "students": "Étudiantes",
+      "addedToGroup": "Ajoutées au groupe"
+    },
+    "messages": {
+      "success": "Inscription enregistrée avec succès !",
+      "error": "Une erreur est survenue",
+      "ageError": "Vous devez avoir au moins 15 ans pour participer",
+      "required": "Ce champ est requis"
+    }
+  },
+  "en": {
+    "title": "Women's Event Registration",
+    "subtitle": "Women's Event",
+    "form": {
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "age": "Age",
+      "phone": "Phone Number",
+      "isStudent": "Are you a student?",
+      "yes": "Yes",
+      "no": "No",
+      "studentLevel": "Education Level",
+      "secondary": "Secondary",
+      "university": "University",
+      "studentLocation": "Where do you study?",
+      "church": "Church where you pray (optional)",
+      "hasSnack": "Will you bring a snack?",
+      "snackDetail": "Specify the snack",
+      "submit": "Register",
+      "submitting": "Registering..."
+    },
+    "info": {
+      "title": "Important Information",
+      "whatsapp": "You will be added to the WhatsApp group to receive all information",
+      "age": "Event reserved for women aged 15 and over",
+      "snack": "Snack is optional but recommended to share together",
+      "location": "Location: Public Garden",
+      "date": "Date: November 1st, 2025",
+      "time": "Time: 9am to 1pm"
+    },
+    "admin": {
+      "title": "Admin Dashboard",
+      "search": "Search...",
+      "filterSnack": "Filter by snack",
+      "filterGroup": "Filter by group",
+      "all": "All",
+      "withSnack": "With snack",
+      "withoutSnack": "Without snack",
+      "added": "Added",
+      "notAdded": "Not added",
+      "export": "Export CSV",
+      "logout": "Logout",
+      "name": "Name",
+      "age": "Age",
+      "phone": "Phone",
+      "student": "Student",
+      "level": "Level",
+      "church": "Church",
+      "snack": "Snack",
+      "snackDetail": "Snack Detail",
+      "addedToGroup": "Added to group",
+      "actions": "Actions",
+      "edit": "Edit",
+      "delete": "Delete",
+      "confirmDelete": "Are you sure you want to delete this registration?"
+    },
+    "auth": {
+      "title": "Admin Login",
+      "username": "Username",
+      "password": "Password",
+      "login": "Login",
+      "cancel": "Cancel",
+      "locked": "Account locked. Try again in {minutes} minute(s).",
+      "attemptsRemaining": "{attempts} attempt(s) remaining"
+    },
+    "stats": {
+      "total": "Total Registrations",
+      "withSnack": "With Snack",
+      "students": "Students",
+      "addedToGroup": "Added to Group"
+    },
+    "messages": {
+      "success": "Registration successful!",
+      "error": "An error occurred",
+      "ageError": "You must be at least 15 years old to participate",
+      "required": "This field is required"
+    }
+  }
+}
