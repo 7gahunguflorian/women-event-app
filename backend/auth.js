@@ -4,24 +4,6 @@ const { pool, dbGet, dbRun } = require('./database');
 // Map pour stocker les verrouillages en mémoire
 const loginLocks = new Map();
 
-// Initialiser un admin par défaut si aucun n'existe
-async function initializeAdmin() {
-  try {
-    const checkAdmin = await dbGet('SELECT * FROM admin_users WHERE username = $1', ['admin']);
-    
-    if (!checkAdmin) {
-      const hashedPassword = bcrypt.hashSync('admin123', 10);
-      await dbRun('INSERT INTO admin_users (username, passwordHash) VALUES ($1, $2) RETURNING id', ['admin', hashedPassword]);
-      console.log('✅ Admin par défaut créé: username=admin, password=admin123');
-    }
-  } catch (error) {
-    console.error('Erreur lors de l\'initialisation de l\'admin:', error);
-  }
-}
-
-// Appeler initializeAdmin au démarrage
-initializeAdmin().catch(console.error);
-
 // Vérifier si un utilisateur est verrouillé
 function isLocked(username) {
   const lock = loginLocks.get(username);
@@ -91,6 +73,11 @@ async function authenticate(username, password) {
     // Vérifier les identifiants
     const user = await dbGet('SELECT * FROM admin_users WHERE username = $1', [username]);
     
+    console.log('🔍 User trouvé:', user ? 'OUI' : 'NON');
+    if (user) {
+      console.log('🔍 User data:', { username: user.username, hasPassword: !!user.passwordhash || !!user.passwordHash });
+    }
+    
     if (!user) {
       const attemptResult = await recordAttempt(username, false);
       return {
@@ -100,7 +87,18 @@ async function authenticate(username, password) {
       };
     }
     
-    const passwordMatch = await bcrypt.compare(password, user.passwordHash);
+    // PostgreSQL retourne les colonnes en minuscules par défaut
+    const passwordHash = user.passwordhash || user.passwordHash;
+    
+    if (!passwordHash) {
+      console.error('❌ Pas de passwordHash trouvé pour l\'utilisateur:', user);
+      return {
+        success: false,
+        message: 'Erreur de configuration du compte'
+      };
+    }
+    
+    const passwordMatch = await bcrypt.compare(password, passwordHash);
     
     if (!passwordMatch) {
       const attemptResult = await recordAttempt(username, false);
