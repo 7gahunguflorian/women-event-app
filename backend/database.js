@@ -33,8 +33,10 @@ const dbRun = async (sql, params = []) => {
   const client = await pool.connect();
   try {
     const result = await client.query(sql, params);
+    // Si la requête contient RETURNING, retourner l'ID de la première ligne
+    // Sinon, retourner null pour lastID
     return { 
-      lastID: result.rows[0]?.id || null, 
+      lastID: result.rows && result.rows.length > 0 ? result.rows[0].id : null, 
       changes: result.rowCount 
     };
   } finally {
