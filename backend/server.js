@@ -16,7 +16,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Servir les fichiers statiques du frontend
-app.use(express.static(path.join(__dirname, '../frontend')));
+app.use(express.static(path.join(__dirname, '../frontend/dist')));
 
 // Middleware pour gérer les erreurs asynchrones
 const asyncHandler = fn => (req, res, next) => {
@@ -43,13 +43,13 @@ app.post('/api/auth/login', asyncHandler(async (req, res) => {
 app.use('/api/registrations', registrationsRouter);
 app.use('/api/users', usersRouter);
 
-// Route pour servir le frontend
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/index.html'));
-});
-
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/index.html'));
+// Route pour servir le frontend (catch-all pour React Router)
+app.get('*', (req, res) => {
+  // Ne pas intercepter les routes API
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ error: 'Route API non trouvée' });
+  }
+  res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
 });
 
 // Gestion des erreurs globales
