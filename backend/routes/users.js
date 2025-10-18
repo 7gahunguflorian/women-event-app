@@ -30,7 +30,7 @@ router.post('/', requireAuth, async (req, res) => {
     }
 
     // Vérifier si l'utilisateur existe déjà
-    const existingUser = await dbGet('SELECT * FROM admin_users WHERE username = ?', [username]);
+    const existingUser = await dbGet('SELECT * FROM admin_users WHERE username = $1', [username]);
     if (existingUser) {
       return res.status(409).json({ error: 'Ce nom d\'utilisateur existe déjà' });
     }
@@ -40,7 +40,7 @@ router.post('/', requireAuth, async (req, res) => {
 
     // Insérer dans la base de données
     const result = await dbRun(
-      'INSERT INTO admin_users (username, passwordHash) VALUES (?, ?)',
+      'INSERT INTO admin_users (username, passwordHash) VALUES ($1, $2) RETURNING id',
       [username, hashedPassword]
     );
 
@@ -66,7 +66,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Impossible de supprimer le dernier administrateur' });
     }
 
-    await dbRun('DELETE FROM admin_users WHERE id = ?', [id]);
+    await dbRun('DELETE FROM admin_users WHERE id = $1', [id]);
     res.json({ success: true });
   } catch (error) {
     console.error('Erreur lors de la suppression de l\'utilisateur:', error);

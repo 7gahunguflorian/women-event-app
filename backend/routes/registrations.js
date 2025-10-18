@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { db, dbGet, dbRun, dbAll } = require('../database');
+const { pool, dbGet, dbRun, dbAll } = require('../database');
 const { requireAuth } = require('../auth');
 
 // GET - Récupérer toutes les inscriptions (protégé)
@@ -17,8 +17,8 @@ router.get('/', requireAuth, async (req, res) => {
 router.get('/stats', requireAuth, async (req, res) => {
   try {
     const total = await dbGet('SELECT COUNT(*) as count FROM registrations');
-    const withSnack = await dbGet('SELECT COUNT(*) as count FROM registrations WHERE hasSnack = "oui"');
-    const students = await dbGet('SELECT COUNT(*) as count FROM registrations WHERE isStudent = "oui"');
+    const withSnack = await dbGet('SELECT COUNT(*) as count FROM registrations WHERE hasSnack = \'oui\'');
+    const students = await dbGet('SELECT COUNT(*) as count FROM registrations WHERE isStudent = \'oui\'');
     const addedToGroup = await dbGet('SELECT COUNT(*) as count FROM registrations WHERE addedToGroup = 1');
     
     res.json({
@@ -61,7 +61,7 @@ router.post('/', async (req, res) => {
     }
 
     // Vérifier si le numéro de téléphone existe déjà
-    const existingPhone = await dbGet('SELECT * FROM registrations WHERE phone = ?', [phone]);
+    const existingPhone = await dbGet('SELECT * FROM registrations WHERE phone = $1', [phone]);
     if (existingPhone) {
       return res.status(409).json({ error: 'Ce numéro de téléphone est déjà inscrit' });
     }
@@ -70,7 +70,7 @@ router.post('/', async (req, res) => {
     const result = await dbRun(
       `INSERT INTO registrations 
       (firstName, lastName, age, phone, isStudent, studentLevel, studentLocation, church, hasSnack, snackDetail)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
       [
         firstName, 
         lastName, 
@@ -115,18 +115,18 @@ router.put('/:id', requireAuth, async (req, res) => {
 
     await dbRun(
       `UPDATE registrations 
-       SET firstName = ?, 
-           lastName = ?, 
-           age = ?, 
-           phone = ?, 
-           isStudent = ?, 
-           studentLevel = ?, 
-           studentLocation = ?, 
-           church = ?, 
-           hasSnack = ?, 
-           snackDetail = ?,
-           addedToGroup = ?
-       WHERE id = ?`,
+       SET firstName = $1, 
+           lastName = $2, 
+           age = $3, 
+           phone = $4, 
+           isStudent = $5, 
+           studentLevel = $6, 
+           studentLocation = $7, 
+           church = $8, 
+           hasSnack = $9, 
+           snackDetail = $10,
+           addedToGroup = $11
+       WHERE id = $12`,
       [
         firstName,
         lastName,
@@ -154,7 +154,7 @@ router.put('/:id', requireAuth, async (req, res) => {
 router.delete('/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    await dbRun('DELETE FROM registrations WHERE id = ?', [id]);
+    await dbRun('DELETE FROM registrations WHERE id = $1', [id]);
     res.json({ success: true });
   } catch (error) {
     console.error('Erreur lors de la suppression de l\'inscription:', error);

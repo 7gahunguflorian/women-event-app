@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const { db, dbGet, dbRun } = require('./database');
+const { pool, dbGet, dbRun } = require('./database');
 
 // Map pour stocker les verrouillages en mémoire
 const loginLocks = new Map();
@@ -7,11 +7,11 @@ const loginLocks = new Map();
 // Initialiser un admin par défaut si aucun n'existe
 async function initializeAdmin() {
   try {
-    const checkAdmin = await dbGet('SELECT * FROM admin_users WHERE username = ?', ['admin']);
+    const checkAdmin = await dbGet('SELECT * FROM admin_users WHERE username = $1', ['admin']);
     
     if (!checkAdmin) {
       const hashedPassword = bcrypt.hashSync('admin123', 10);
-      await dbRun('INSERT INTO admin_users (username, passwordHash) VALUES (?, ?)', ['admin', hashedPassword]);
+      await dbRun('INSERT INTO admin_users (username, passwordHash) VALUES ($1, $2) RETURNING id', ['admin', hashedPassword]);
       console.log('✅ Admin par défaut créé: username=admin, password=admin123');
     }
   } catch (error) {
@@ -49,14 +49,14 @@ function getLockTimeRemaining(username) {
 // Enregistrer une tentative de connexion
 async function recordAttempt(username, success) {
   try {
-    await dbRun('INSERT INTO login_attempts (username, success) VALUES (?, ?)', [username, success ? 1 : 0]);
+    await dbRun('INSERT INTO login_attempts (username, success) VALUES ($1, $2) RETURNING id', [username, success ? 1 : 0]);
     
     if (!success) {
       // Compter les tentatives échouées dans les 30 dernières minutes
       const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
       
       const result = await dbGet(
-        'SELECT COUNT(*) as count FROM login_attempts WHERE username = ? AND success = 0 AND attemptTime > ?',
+        'SELECT COUNT(*) as count FROM login_attempts WHERE username = $1 AND success = 0 AND attemptTime > $2',
         [username, thirtyMinutesAgo]
       );
       
@@ -89,7 +89,7 @@ async function authenticate(username, password) {
     }
     
     // Vérifier les identifiants
-    const user = await dbGet('SELECT * FROM admin_users WHERE username = ?', [username]);
+    const user = await dbGet('SELECT * FROM admin_users WHERE username = $1', [username]);
     
     if (!user) {
       const attemptResult = await recordAttempt(username, false);
