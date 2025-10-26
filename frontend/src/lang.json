@@ -75,6 +75,11 @@
       "error": "Une erreur est survenue",
       "ageError": "Vous devez avoir au moins 15 ans pour participer",
       "required": "Ce champ est requis"
+    },
+    "closed": {
+      "title": "INSCRIPTIONS TERMINÉES",
+      "message": "Nous avons atteint le nombre maximal de participantes.",
+      "thankYou": "Merci pour votre intérêt !"
     }
   },
   "en": {
@@ -153,6 +158,11 @@
       "error": "An error occurred",
       "ageError": "You must be at least 15 years old to participate",
       "required": "This field is required"
+    },
+    "closed": {
+      "title": "REGISTRATIONS CLOSED",
+      "message": "We have reached the maximum number of participants.",
+      "thankYou": "Thank you for your interest!"
     }
   }
 }

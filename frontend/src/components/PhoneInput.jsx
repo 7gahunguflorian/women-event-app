@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const PhoneInput = ({ value, onChange, required }) => {
+const PhoneInput = ({ value, onChange, required, disabled }) => {
   const countries = [
     { code: 'BI', name: 'Burundi', dialCode: '+257', flag: '🇧🇮', pattern: /^[67]\d{7}$/ },
     { code: 'CD', name: 'RD Congo', dialCode: '+243', flag: '🇨🇩', pattern: /^[89]\d{8}$/ },
@@ -47,6 +47,7 @@ const PhoneInput = ({ value, onChange, required }) => {
             onChange={handleCountryChange}
             className="w-full px-2 sm:px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-smooth appearance-none text-sm sm:text-base"
             style={{ paddingRight: '2rem' }}
+            disabled={disabled}
           >
             {countries.map((country) => (
               <option key={country.code} value={country.code}>
@@ -72,6 +73,7 @@ const PhoneInput = ({ value, onChange, required }) => {
                 : 'border-gray-300 dark:border-gray-600'
             }`}
             required={required}
+            disabled={disabled}
           />
         </div>
       </div>

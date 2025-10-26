@@ -3,6 +3,11 @@ import { Send } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
 import PhoneInput from './PhoneInput';
+import ClosedStamp from './ClosedStamp';
+import { APP_CONFIG } from '../config';
+
+// Configuration: Voir src/config.js pour activer/désactiver les inscriptions
+const REGISTRATIONS_OPEN = APP_CONFIG.REGISTRATIONS_OPEN;
 
 const RegistrationForm = () => {
   const { t } = useLanguage();
@@ -88,7 +93,10 @@ const RegistrationForm = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 relative overflow-hidden">
+      {/* Tampon "Inscriptions terminées" */}
+      {!REGISTRATIONS_OPEN && <ClosedStamp />}
+
       <h2 className="text-2xl sm:text-3xl font-bold text-primary-600 dark:text-primary-400 mb-4 sm:mb-6">
         {t('title')}
       </h2>
@@ -106,6 +114,7 @@ const RegistrationForm = () => {
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-smooth"
               required
+              disabled={!REGISTRATIONS_OPEN}
             />
           </div>
 
@@ -120,6 +129,7 @@ const RegistrationForm = () => {
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-smooth"
               required
+              disabled={!REGISTRATIONS_OPEN}
             />
           </div>
         </div>
@@ -137,6 +147,7 @@ const RegistrationForm = () => {
               min="15"
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-smooth"
               required
+              disabled={!REGISTRATIONS_OPEN}
             />
           </div>
 
@@ -148,6 +159,7 @@ const RegistrationForm = () => {
               value={formData.phone}
               onChange={handleChange}
               required
+              disabled={!REGISTRATIONS_OPEN}
             />
           </div>
         </div>
@@ -166,6 +178,7 @@ const RegistrationForm = () => {
                 onChange={handleChange}
                 className="text-primary-600 focus:ring-primary-500"
                 required
+                disabled={!REGISTRATIONS_OPEN}
               />
               <span className="text-gray-700 dark:text-gray-300">{t('form.yes')}</span>
             </label>
@@ -178,6 +191,7 @@ const RegistrationForm = () => {
                 onChange={handleChange}
                 className="text-primary-600 focus:ring-primary-500"
                 required
+                disabled={!REGISTRATIONS_OPEN}
               />
               <span className="text-gray-700 dark:text-gray-300">{t('form.no')}</span>
             </label>
@@ -196,6 +210,7 @@ const RegistrationForm = () => {
                 onChange={handleChange}
                 className="w-full px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-600 dark:text-white transition-smooth text-sm sm:text-base"
                 required
+                disabled={!REGISTRATIONS_OPEN}
               >
                 <option value="">-- Sélectionnez --</option>
                 <option value="secondaire">{t('form.secondary')}</option>
@@ -215,6 +230,7 @@ const RegistrationForm = () => {
                 placeholder="Ex: Université du Burundi"
                 className="w-full px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-600 dark:text-white transition-smooth text-sm sm:text-base"
                 required
+                disabled={!REGISTRATIONS_OPEN}
               />
             </div>
           </div>
@@ -230,6 +246,7 @@ const RegistrationForm = () => {
             value={formData.church}
             onChange={handleChange}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-smooth"
+            disabled={!REGISTRATIONS_OPEN}
           />
         </div>
 
@@ -247,6 +264,7 @@ const RegistrationForm = () => {
                 onChange={handleChange}
                 className="text-primary-600 focus:ring-primary-500"
                 required
+                disabled={!REGISTRATIONS_OPEN}
               />
               <span className="text-gray-700 dark:text-gray-300">{t('form.yes')}</span>
             </label>
@@ -259,6 +277,7 @@ const RegistrationForm = () => {
                 onChange={handleChange}
                 className="text-primary-600 focus:ring-primary-500"
                 required
+                disabled={!REGISTRATIONS_OPEN}
               />
               <span className="text-gray-700 dark:text-gray-300">{t('form.no')}</span>
             </label>
@@ -278,13 +297,14 @@ const RegistrationForm = () => {
               placeholder="Ex: Gâteau, fruits, boissons..."
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-600 dark:text-white transition-smooth"
               required
+              disabled={!REGISTRATIONS_OPEN}
             />
           </div>
         )}
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !REGISTRATIONS_OPEN}
           className="w-full flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-gradient-to-r from-primary-600 to-lavender-600 text-white rounded-lg hover:from-primary-700 hover:to-lavender-700 disabled:opacity-50 disabled:cursor-not-allowed transition-smooth hover:scale-105 shadow-lg text-sm sm:text-base"
         >
           <Send size={18} className="sm:w-5 sm:h-5" />
