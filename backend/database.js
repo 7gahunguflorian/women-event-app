@@ -48,4 +48,16 @@ db.exec(`
 
 console.log('✅ Tables vérifiées/créées');
 
+// Créer l'utilisateur admin par défaut si nécessaire
+const bcrypt = require('bcryptjs');
+const adminUser = db.prepare('SELECT * FROM admin_users WHERE username = ?').get('admin');
+
+if (!adminUser) {
+  const hashedPassword = bcrypt.hashSync('admin123', 10);
+  db.prepare('INSERT INTO admin_users (username, passwordHash) VALUES (?, ?)').run('admin', hashedPassword);
+  console.log('✅ Compte admin créé par défaut (username: admin, password: admin123)');
+} else {
+  console.log('✅ Compte admin existe déjà');
+}
+
 module.exports = db;

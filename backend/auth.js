@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const { pool, dbGet, dbRun } = require('./database');
+const db = require('./database');
 
 // Map pour stocker les verrouillages en mémoire
 const loginLocks = new Map();
@@ -31,16 +31,15 @@ function getLockTimeRemaining(username) {
 // Enregistrer une tentative de connexion
 async function recordAttempt(username, success) {
   try {
-    await dbRun('INSERT INTO login_attempts (username, success) VALUES ($1, $2) RETURNING id', [username, success ? 1 : 0]);
+    db.prepare('INSERT INTO login_attempts (username, success) VALUES (?, ?)').run(username, success ? 1 : 0);
     
     if (!success) {
       // Compter les tentatives échouées dans les 30 dernières minutes
       const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
       
-      const result = await dbGet(
-        'SELECT COUNT(*) as count FROM login_attempts WHERE username = $1 AND success = 0 AND attemptTime > $2',
-        [username, thirtyMinutesAgo]
-      );
+      const result = db.prepare(
+        'SELECT COUNT(*) as count FROM login_attempts WHERE username = ? AND success = 0 AND attemptTime > ?'
+      ).get(username, thirtyMinutesAgo);
       
       if (result && result.count >= 5) {
         // Verrouiller pour 30 minutes
@@ -71,7 +70,7 @@ async function authenticate(username, password) {
     }
     
     // Vérifier les identifiants
-    const user = await dbGet('SELECT * FROM admin_users WHERE username = $1', [username]);
+    const user = db.prepare('SELECT * FROM admin_users WHERE username = ?').get(username);
     
     if (!user) {
       const attemptResult = await recordAttempt(username, false);
@@ -82,8 +81,8 @@ async function authenticate(username, password) {
       };
     }
     
-    // PostgreSQL retourne les colonnes en minuscules par défaut
-    const passwordHash = user.passwordhash || user.passwordHash;
+    // SQLite retourne passwordHash tel quel
+    const passwordHash = user.passwordHash;
     
     if (!passwordHash) {
       console.error('❌ Pas de passwordHash trouvé pour l\'utilisateur:', user);
