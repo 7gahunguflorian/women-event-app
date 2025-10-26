@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const db = require('./database');
+const { db, pool, isProduction } = require('./database');
 
 // Map pour stocker les verrouillages en mémoire
 const loginLocks = new Map();
@@ -31,15 +31,38 @@ function getLockTimeRemaining(username) {
 // Enregistrer une tentative de connexion
 async function recordAttempt(username, success) {
   try {
-    db.prepare('INSERT INTO login_attempts (username, success) VALUES (?, ?)').run(username, success ? 1 : 0);
+    if (isProduction) {
+      const client = await pool.connect();
+      try {
+        await client.query('INSERT INTO login_attempts (username, success) VALUES ($1, $2)', [username, success ? 1 : 0]);
+      } finally {
+        client.release();
+      }
+    } else {
+      db.prepare('INSERT INTO login_attempts (username, success) VALUES (?, ?)').run(username, success ? 1 : 0);
+    }
     
     if (!success) {
       // Compter les tentatives échouées dans les 30 dernières minutes
       const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
       
-      const result = db.prepare(
-        'SELECT COUNT(*) as count FROM login_attempts WHERE username = ? AND success = 0 AND attemptTime > ?'
-      ).get(username, thirtyMinutesAgo);
+      let result;
+      if (isProduction) {
+        const client = await pool.connect();
+        try {
+          const res = await client.query(
+            'SELECT COUNT(*) as count FROM login_attempts WHERE username = $1 AND success = 0 AND attemptTime > $2',
+            [username, thirtyMinutesAgo]
+          );
+          result = res.rows[0];
+        } finally {
+          client.release();
+        }
+      } else {
+        result = db.prepare(
+          'SELECT COUNT(*) as count FROM login_attempts WHERE username = ? AND success = 0 AND attemptTime > ?'
+        ).get(username, thirtyMinutesAgo);
+      }
       
       if (result && result.count >= 5) {
         // Verrouiller pour 30 minutes
@@ -70,7 +93,18 @@ async function authenticate(username, password) {
     }
     
     // Vérifier les identifiants
-    const user = db.prepare('SELECT * FROM admin_users WHERE username = ?').get(username);
+    let user;
+    if (isProduction) {
+      const client = await pool.connect();
+      try {
+        const res = await client.query('SELECT * FROM admin_users WHERE username = $1', [username]);
+        user = res.rows[0];
+      } finally {
+        client.release();
+      }
+    } else {
+      user = db.prepare('SELECT * FROM admin_users WHERE username = ?').get(username);
+    }
     
     if (!user) {
       const attemptResult = await recordAttempt(username, false);
@@ -81,8 +115,8 @@ async function authenticate(username, password) {
       };
     }
     
-    // SQLite retourne passwordHash tel quel
-    const passwordHash = user.passwordHash;
+    // PostgreSQL retourne les colonnes en minuscules, SQLite en camelCase
+    const passwordHash = user.passwordhash || user.passwordHash;
     
     if (!passwordHash) {
       console.error('❌ Pas de passwordHash trouvé pour l\'utilisateur:', user);

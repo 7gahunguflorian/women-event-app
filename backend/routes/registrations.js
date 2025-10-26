@@ -1,18 +1,32 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../database');
+const { dbGet, dbAll, dbRun } = require('../db-helper');
 const { requireAuth } = require('../auth');
 
-// SQLite retourne les colonnes telles quelles (pas besoin de normalisation)
+// Normaliser les données (PostgreSQL retourne en minuscules)
 const normalizeRegistration = (reg) => {
   if (!reg) return null;
-  return reg;
+  return {
+    id: reg.id,
+    firstName: reg.firstname || reg.firstName,
+    lastName: reg.lastname || reg.lastName,
+    age: reg.age,
+    phone: reg.phone,
+    isStudent: reg.isstudent || reg.isStudent,
+    studentLevel: reg.studentlevel || reg.studentLevel,
+    studentLocation: reg.studentlocation || reg.studentLocation,
+    church: reg.church,
+    hasSnack: reg.hassnack || reg.hasSnack,
+    snackDetail: reg.snackdetail || reg.snackDetail,
+    addedToGroup: reg.addedtogroup !== undefined ? reg.addedtogroup : reg.addedToGroup,
+    createdAt: reg.createdat || reg.createdAt
+  };
 };
 
 // GET - Récupérer toutes les inscriptions (protégé)
 router.get('/', requireAuth, async (req, res) => {
   try {
-    const registrations = db.prepare('SELECT * FROM registrations ORDER BY createdAt DESC').all();
+    const registrations = await dbAll('SELECT * FROM registrations ORDER BY createdAt DESC');
     const normalized = registrations.map(normalizeRegistration);
     res.json(normalized);
   } catch (error) {
@@ -23,10 +37,10 @@ router.get('/', requireAuth, async (req, res) => {
 // GET - Statistiques (protégé)
 router.get('/stats', requireAuth, async (req, res) => {
   try {
-    const total = db.prepare('SELECT COUNT(*) as count FROM registrations').get();
-    const withSnack = db.prepare('SELECT COUNT(*) as count FROM registrations WHERE hasSnack = \'oui\'').get();
-    const students = db.prepare('SELECT COUNT(*) as count FROM registrations WHERE isStudent = \'oui\'').get();
-    const addedToGroup = db.prepare('SELECT COUNT(*) as count FROM registrations WHERE addedToGroup = 1').get();
+    const total = await dbGet('SELECT COUNT(*) as count FROM registrations');
+    const withSnack = await dbGet('SELECT COUNT(*) as count FROM registrations WHERE hasSnack = \'oui\'');
+    const students = await dbGet('SELECT COUNT(*) as count FROM registrations WHERE isStudent = \'oui\'');
+    const addedToGroup = await dbGet('SELECT COUNT(*) as count FROM registrations WHERE addedToGroup = 1');
     
     res.json({
       total: total.count,
@@ -68,27 +82,28 @@ router.post('/', async (req, res) => {
     }
 
     // Vérifier si le numéro de téléphone existe déjà
-    const existingPhone = db.prepare('SELECT * FROM registrations WHERE phone = ?').get(phone);
+    const existingPhone = await dbGet('SELECT * FROM registrations WHERE phone = ?', [phone]);
     if (existingPhone) {
       return res.status(409).json({ error: 'Ce numéro de téléphone est déjà inscrit' });
     }
 
     // Insérer dans la base de données
-    const result = db.prepare(
+    const result = await dbRun(
       `INSERT INTO registrations 
       (firstName, lastName, age, phone, isStudent, studentLevel, studentLocation, church, hasSnack, snackDetail)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    ).run(
-      firstName, 
-      lastName, 
-      age, 
-      phone, 
-      isStudent, 
-      isStudent === 'oui' ? studentLevel : null, 
-      isStudent === 'oui' ? studentLocation : null, 
-      church || '', 
-      hasSnack, 
-      hasSnack === 'oui' ? snackDetail : null
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        firstName, 
+        lastName, 
+        age, 
+        phone, 
+        isStudent, 
+        isStudent === 'oui' ? studentLevel : null, 
+        isStudent === 'oui' ? studentLocation : null, 
+        church || '', 
+        hasSnack, 
+        hasSnack === 'oui' ? snackDetail : null
+      ]
     );
 
     res.status(201).json({ 
@@ -134,7 +149,7 @@ router.put('/:id', requireAuth, async (req, res) => {
       addedToGroup: addedToGroup !== undefined ? addedToGroup : (req.body.addedtogroup !== undefined ? req.body.addedtogroup : 0)
     };
 
-    db.prepare(
+    await dbRun(
       `UPDATE registrations 
        SET firstName = ?, 
            lastName = ?, 
@@ -147,20 +162,21 @@ router.put('/:id', requireAuth, async (req, res) => {
            hasSnack = ?, 
            snackDetail = ?,
            addedToGroup = ?
-       WHERE id = ?`
-    ).run(
-      normalizedData.firstName,
-      normalizedData.lastName,
-      normalizedData.age,
-      normalizedData.phone,
-      normalizedData.isStudent,
-      normalizedData.isStudent === 'oui' ? normalizedData.studentLevel : null,
-      normalizedData.isStudent === 'oui' ? normalizedData.studentLocation : null,
-      normalizedData.church,
-      normalizedData.hasSnack,
-      normalizedData.hasSnack === 'oui' ? normalizedData.snackDetail : null,
-      normalizedData.addedToGroup ? 1 : 0,
-      id
+       WHERE id = ?`,
+      [
+        normalizedData.firstName,
+        normalizedData.lastName,
+        normalizedData.age,
+        normalizedData.phone,
+        normalizedData.isStudent,
+        normalizedData.isStudent === 'oui' ? normalizedData.studentLevel : null,
+        normalizedData.isStudent === 'oui' ? normalizedData.studentLocation : null,
+        normalizedData.church,
+        normalizedData.hasSnack,
+        normalizedData.hasSnack === 'oui' ? normalizedData.snackDetail : null,
+        normalizedData.addedToGroup ? 1 : 0,
+        id
+      ]
     );
 
     res.json({ success: true });
@@ -174,7 +190,7 @@ router.put('/:id', requireAuth, async (req, res) => {
 router.delete('/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    db.prepare('DELETE FROM registrations WHERE id = ?').run(id);
+    await dbRun('DELETE FROM registrations WHERE id = ?', [id]);
     res.json({ success: true });
   } catch (error) {
     console.error('Erreur lors de la suppression de l\'inscription:', error);
@@ -185,7 +201,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
 // GET - Export CSV (protégé)
 router.get('/export/csv', requireAuth, async (req, res) => {
   try {
-    const registrations = db.prepare('SELECT * FROM registrations ORDER BY lastName, firstName').all();
+    const registrations = await dbAll('SELECT * FROM registrations ORDER BY lastName, firstName');
     const normalized = registrations.map(normalizeRegistration);
     
     // Créer le contenu CSV
